@@ -1,0 +1,55 @@
+<html>
+<body>
+	<div>
+		<h1>http</h1>
+		<button onclick="http_start()">Start</button>
+		<div id="http_duration"></div>
+	</div>
+	<div>
+		<h1>ws</h1>
+		<button onclick="ws_start()">Start</button>
+		<div id="ws_duration"></div>
+	</div>
+</body>
+<script>
+var http_duration = document.querySelector("#http_duration");
+var ws_receives = 0;
+var tries = 10000;
+
+async function http_start() {
+	http_duration.innerHTML = "";
+	startTime = performance.now();
+
+	for (i = 0; i < tries; i++) {
+		let response = await fetch("/api/small");
+		let text = await response.text();
+	}
+
+	endTime = performance.now();
+	http_duration.innerHTML = `Finished ${tries} tries in ${endTime - startTime} milliseconds`;
+}
+
+async function ws_start() {
+	ws_duration.innerHTML = "";
+
+	let socket = new WebSocket("ws://localhost:8000/api/ws");
+
+	socket.onopen = () => {
+		console.log("connected");
+		startTime = performance.now();
+		socket.send("");
+	}
+
+	socket.onmessage = (e) => {
+		ws_receives++;
+		let text = e.data;
+		if (ws_receives < tries) {
+			socket.send("");
+			return;
+		}
+		endTime = performance.now();
+		ws_duration.innerHTML = `Finished ${tries} in ${endTime - startTime} milliseconds`;
+	}
+}
+</script>
+</html>
