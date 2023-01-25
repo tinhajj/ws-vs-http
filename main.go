@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+
 	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{} // use default options
+var blocks = map[int]string{}
 
 func main() {
 	fs := http.FileServer(http.Dir("./html"))
 	http.Handle("/", fs)
-	http.HandleFunc("/api/small", small)
-	http.HandleFunc("/api/big", big)
-
+	http.HandleFunc("/api/block", handler)
 	http.HandleFunc("/api/ws", echo)
 
 	err := http.ListenAndServe(":8000", nil)
@@ -24,12 +25,20 @@ func main() {
 	}
 }
 
-func small(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "smol")
+func handler(w http.ResponseWriter, r *http.Request) {
+	params := r.URL.Query()
+	fmt.Fprintf(w, block(params.Get("multiple")))
 }
 
-func big(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, strings.Repeat("big", 1000))
+func block(input string) string {
+	multiple, _ := strconv.Atoi(input)
+	val, ok := blocks[multiple]
+	if !ok {
+		fmt.Println("caching block multiple:", multiple)
+		blocks[multiple] = strings.Repeat("BLOCK", multiple)
+		val = blocks[multiple]
+	}
+	return val
 }
 
 func echo(w http.ResponseWriter, r *http.Request) {
@@ -45,12 +54,14 @@ func echo(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	for {
-		mt, _, err := c.ReadMessage()
+		mt, msg, err := c.ReadMessage()
 		if err != nil {
 			log.Println("read:", err)
 			break
 		}
-		err = c.WriteMessage(mt, []byte("smol"))
+
+		err = c.WriteMessage(mt, []byte(block(string(msg))))
+
 		if err != nil {
 			log.Println("write:", err)
 			break

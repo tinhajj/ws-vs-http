@@ -1,6 +1,17 @@
 <html>
 <body>
 	<div>
+		<h1>input</h1>
+		<label>
+			Tries
+			<input id="tries" type="text" />
+		</label>
+		<label>
+			Multiple
+			<input id="multiple" type="text" />
+		</label>
+	</div>
+	<div>
 		<h1>http</h1>
 		<button onclick="http_start()">Start</button>
 		<div id="http_duration"></div>
@@ -12,17 +23,26 @@
 	</div>
 </body>
 <script>
-var http_duration = document.querySelector("#http_duration");
-var ws_receives = 0;
-var tries = 10000;
+var $http_duration = document.querySelector("#http_duration");
+var $ws_duration = document.querySelector("#ws_duration");
+var $tries = document.querySelector("#tries");
+var $multiple = document.querySelector("#multiple");
+
+var tries = "100";
+var multiple = "100000";
+
+$tries.value = tries;
+$multiple.value = multiple;
+$tries.addEventListener("change", (e) => tries = e.target.value);
+$multiple.addEventListener("change", (e) => multiple = e.target.value);
 
 async function http_start() {
 	http_duration.innerHTML = "";
 	startTime = performance.now();
 
 	for (i = 0; i < tries; i++) {
-		let response = await fetch("/api/small");
-		let text = await response.text();
+		let response = await fetch(`/api/block?multiple=${multiple}`);
+		let text = await response.text(); // read in the data
 	}
 
 	endTime = performance.now();
@@ -30,25 +50,27 @@ async function http_start() {
 }
 
 async function ws_start() {
-	ws_duration.innerHTML = "";
+	let ws_receives = 0;
+	$ws_duration.innerHTML = "";
 
 	let socket = new WebSocket("ws://localhost:8000/api/ws");
 
 	socket.onopen = () => {
 		console.log("connected");
 		startTime = performance.now();
-		socket.send("");
+		socket.send(multiple);
 	}
 
 	socket.onmessage = (e) => {
 		ws_receives++;
-		let text = e.data;
+		let text = e.data; // read in the data
 		if (ws_receives < tries) {
-			socket.send("");
+			socket.send(multiple);
 			return;
 		}
 		endTime = performance.now();
-		ws_duration.innerHTML = `Finished ${tries} in ${endTime - startTime} milliseconds`;
+		$ws_duration.innerHTML = `Finished ${tries} in ${endTime - startTime} milliseconds`;
+		socket.close();
 	}
 }
 </script>
