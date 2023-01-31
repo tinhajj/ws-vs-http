@@ -1,0 +1,6 @@
+namespace block;
+
+table Block {
+	id: uint32;
+	names: [string];
+}
