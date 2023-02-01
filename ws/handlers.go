@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -18,10 +17,8 @@ func HandleFB(w http.ResponseWriter, r *http.Request) {
 		log.Print("failed to upgrade:", err)
 		return
 	}
-	fmt.Println("connected")
 	defer func() {
 		c.Close()
-		fmt.Println("disconnected")
 	}()
 
 	for {
@@ -49,10 +46,8 @@ func HandleJSON(w http.ResponseWriter, r *http.Request) {
 		log.Print("failed to upgrade:", err)
 		return
 	}
-	fmt.Println("connected")
 	defer func() {
 		c.Close()
-		fmt.Println("disconnected")
 	}()
 
 	for {
