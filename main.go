@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fs := http.FileServer(http.Dir("./html"))
+	fs := http.FileServer(http.Dir("./html/build"))
 	http.Handle("/", fs)
 
 	// http
